@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+  <head>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+    <script type="text/javascript" src="./uvcharts.min.js"></script>
+    <script type="text/javascript" src="./canvasjs.min.js"></script>
+  </head>
+
+  <body>
+    <div id="chartContainer" style="height: 300px; width: 100%;">
+    </div>
+
+  </body>
+
+    <script>
+
+    var chartTitle = "(Fake) Temperature Readings Over Time";
+    var names = ["SensorA", "SensorB", "SensorC", "SensorD"];
+    var names = ["A", "B", "C", "D"]
+    var sensorData = {};
+    var time = 5;
+    var randomDelay = 100; 
+    sensorData = {}
+
+var addTimePoint = function(dataset, sensorName, timepoint, value){
+  if (!dataset.hasOwnProperty(sensorName)){
+    dataset[sensorName] = [];
+  }
+  dataset[sensorName].push({
+    x: timepoint,
+    y: value
+  });
+  refreshChart();
+}
+
+var addRandomPoint = function(){
+  var rand = Math.floor(Math.random() * 4);
+  var sensorName;
+  var randomValue;
+  if (rand == 0){
+    sensorName = "A";
+    randomValue = 20;
+  } else if (rand == 1){
+    sensorName = "B";
+    randomValue = 30;
+  } else if (rand == 2){
+    sensorName = "C";
+    randomValue = 40;
+  } else if (rand == 3){
+    sensorName = "D";
+    randomValue = 50;
+  }
+  time += randomDelay/1000; 
+
+  randomValue += Math.round(Math.random() * 10) - 5;
+  addTimePoint(sensorData, sensorName, time, randomValue);
+}
+
+var compareReadingsByTime = function(readingA,readingB){
+  return readingA.x - readingB.x;
+}
+
+var makeData = function(dataset){
+  var data = [];
+  for (var sensorName in dataset){
+    var subset = makeSubset(dataset, sensorName);
+    data.push(subset);
+  }
+  return data;
+}
+
+var makeSubset = function(dataset, sensorName){
+  var subset = {
+    type: "line",
+    showInLegend: true,
+    lineThickness: 2,
+    name: "sensor " + sensorName,
+    dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+  };
+  return subset;
+}
+
+var renderChart = function(sensorData){
+  var data = makeData(sensorData);
+  var chartParams = {
+    title: {
+      text: chartTitle,
+      fontSize: 15
+    },
+    data: data
+  };
+
+  chartParams = 
+  {
+
+      title:{
+        text: chartTitle,
+        fontSize: 30
+      },
+      animationEnabled: false,
+      axisX:{
+
+        gridColor: "Silver",
+        tickColor: "silver",
+      },                        
+      toolTip:{
+        shared:true
+      },
+      theme: "theme1",
+      axisY: {
+        gridColor: "Silver",
+        tickColor: "silver"
+      },
+      legend:{
+        verticalAlign: "center",
+        horizontalAlign: "right"
+      },
+      data: data,
+      legend:{
+        cursor:"pointer",
+        itemclick:function(e){
+          if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+          }
+          else{
+            e.dataSeries.visible = true;
+          }
+          chart.render();
+        }
+      }
+  };
+  var chart = new CanvasJS.Chart("chartContainer", chartParams);
+  chart.render();
+}
+
+var refreshChart = function(){
+  renderChart(sensorData);
+}
+
+window.setInterval(addRandomPoint, randomDelay);
+
+</script>
+</html>

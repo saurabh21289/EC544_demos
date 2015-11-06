@@ -3,7 +3,9 @@ var app = require('express')();
 var xbee_api = require('xbee-api');
 
 var C = xbee_api.constants;
-var XBeeAPI = new xbee_api.XBeeAPI();
+var XBeeAPI = new xbee_api.XBeeAPI({
+  api_mode: 2
+});
 
 var portName = process.argv[2];
 
@@ -15,8 +17,6 @@ portConfig = {
 	baudRate: 9600,
   parser: XBeeAPI.rawParser()
 };
-
-
 
 var sp;
 sp = new SerialPort.SerialPort(portName, portConfig);

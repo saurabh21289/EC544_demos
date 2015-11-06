@@ -16,32 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with XBee-Arduino.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * 
+ * This file has been modified by Aaron Heuckroth for use in EC544: Networking the Physical World at Boston University, Fall 2015.
+ */
  
 #include <XBee.h>
 #include <SoftwareSerial.h>
 
 /*
 This example is for Series 2 XBee
-Receives a ZB RX packet and prints the packet to softserial
 */
 
-uint8_t BEACON_ID = 0;
+// Should be a unique ID between 0 and 255.
+uint8_t BEACON_ID = 1;
+
+
 XBee xbee = XBee();
 XBeeResponse response = XBeeResponse();
 // create reusable response objects for responses we expect to handle 
 ZBRxResponse rx = ZBRxResponse();
 ModemStatusResponse msr = ModemStatusResponse();
-uint8_t shCmd[] = {'D','B'};
-AtCommandRequest atRequest = AtCommandRequest(shCmd);
+
+uint8_t dbCommand[] = {'D','B'};
+AtCommandRequest atRequest = AtCommandRequest(dbCommand);
+
 ZBTxStatusResponse txStatus = ZBTxStatusResponse();
 AtCommandResponse atResponse = AtCommandResponse();
 
-// Define NewSoftSerial TX/RX pins
-// Connect Arduino pin 8 to TX of usb-serial device
-uint8_t ssRX = 8;
-// Connect Arduino pin 9 to RX of usb-serial device
-uint8_t ssTX = 9;
-// Remember to connect all devices to a common Ground: XBee, Arduino and USB-Serial device
 SoftwareSerial xbeeSerial(2,3);
 
 void setup() {  
@@ -49,10 +52,10 @@ void setup() {
   Serial.begin(9600);
   xbeeSerial.begin(9600);
   xbee.setSerial(xbeeSerial);
-  Serial.println("Starting up!");
+  Serial.println("Initializing beacon...");
 }
 
-int sendAtCommand() {
+int sendATCommand(AtCommandRequest atRequest) {
   int value = -1;
   Serial.println("Sending command to the XBee");
 
@@ -145,12 +148,8 @@ void sendTx(ZBTxRequest zbTx){
   }
 }
 
-// continuously reads packets, looking for ZB Receive or Modem Status
-void loop() {
-    
-    xbee.readPacket();
-    
-    if (xbee.getResponse().isAvailable()) {
+void processResponse(){
+  if (xbee.getResponse().isAvailable()) {
       // got something
            
       if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
@@ -187,9 +186,10 @@ void loop() {
         Serial.print("] is ");
         Serial.println(xbee.getResponse().getFrameData()[i], HEX);
       }
-      
+
+            
       XBeeAddress64 replyAddress = rx.getRemoteAddress64();
-      int rssi = sendAtCommand();
+      int rssi = sendATCommand(dbCommand);
       sendRSSIValue(replyAddress, rssi);
       Serial.println("");
         
@@ -198,4 +198,10 @@ void loop() {
       Serial.print("error code:");
       Serial.println(xbee.getResponse().getErrorCode());
     }
+}
+
+// continuously reads packets, looking for ZB Receive or Modem Status
+void loop() {
+    xbee.readPacket();
+    processResponse();
 }
